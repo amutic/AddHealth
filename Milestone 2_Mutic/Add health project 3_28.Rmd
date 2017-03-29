@@ -1,0 +1,188 @@
+---
+  title: "Number of Sexual Partners, Depression, and Anxiety"
+author: "Abby Mutic"
+date: "March 29, 2017"
+output:
+  pdf_document: default
+html_document: default
+word_document: default
+---
+  
+#Load ADD Health Wave 1 Public Use Data
+ 
+```{r}
+load("~/R class- big data/Depression and sexual behavior project/AddHealth/Milestone 2_Mutic/ICPSR_21600/DS0001/21600-0001-Data.rda")
+```
+
+#look at variables(columns) in dataset
+```{r}
+names(da21600.0001)
+```
+
+```{r}
+head(da21600.0001)
+```
+
+#get frequencies of categorical data
+```{r}
+library(plyr)
+count(da21600.0001,'BIO_SEX')
+```
+
+#look at age variable
+```{r}
+factor(da21600.0001$H1GI1Y)
+```
+#make new variable of age
+```{r}
+da21600.0001$age <- factor(da21600.0001$H1GI1Y,
+                           levels = c(1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984),
+                           labels = C("21", "20", "19", "18", "17", "16", "15", "14", "13", "12"))
+```
+#did not work...
+#try to convert/force factor variable for age 
+```{r}
+library(prettyR)
+lbls <- sort(levels(da21600.0001$H1GI1Y))
+lbls <- (sub("^\\([0-9]+\\) +(.+$)", "\\1", lbls))
+da21600.0001$H1GI1Y <- as.numeric(sub("^\\(0*([0-9]+)\\).+$", "\\1",da21600.0001$H1GI1Y))
+da21600.0001$H1GI1Y <- add.value.labels(da21600.0001$H1GI1Y, lbls)
+```
+```{r}
+class(da21600.0001$H1GI1Y)
+```
+```{r}
+summary(da21600.0001$H1GI1Y)
+```
+```{r}
+sd(da21600.0001$H1GI1Y)
+```
+#sd function is not working
+#try getting counts on all variables of interest
+```{r}
+library(plyr)
+count(da21600.0001,'BIO_SEX')#male or female
+count(da21600.0001,'H1GI4')#Hispanic or Latino
+count(da21600.0001,'H1GI6A')#White (can pick more than 1 race)
+count(da21600.0001,'H1GI6B')#Black or A.A.(can pick more than 1 race)
+count(da21600.0001,'H1GI6C')#American Indian or N.A.(can pick more than 1 race)
+count(da21600.0001,'H1GI6D')#Asian or Pacific Islander (can pick more than 1 race)
+count(da21600.0001,'H1GI6E') #other race (can pick more than 1 race)
+count(da21600.0001,'H1GI8') #if had to pick 1 category to describe race (missing=6,194!)
+count(da21600.0001,'H1FS6') #felt depressed in past week
+count(da21600.0001,'H1CO1')#ever had sexual intercourse
+count(da21600.0001,'H1NR6')#number of sexual partners (missing=4,874!)
+count(da21600.0001,'H1GI1Y')#Year of birth (survey was in 1995)
+```
+#summarize numerical variables
+```{r}
+summary(da21600.0001$H1NR6)
+```
+
+```{r}
+sd(da21600.0001$H1NR6)
+```
+#sd not working here either
+-------------------------------------------------------------------------------------------
+#Now going to pull in Wave 4 dataset and review same demographics and depression, anxiety variables
+
+```{r}
+load("~/R class- big data/Depression and sexual behavior project/AddHealth/Milestone 2_Mutic/DS0022/21600-0022-Data.rda")
+```
+#look at frequencies of variables of interest
+```{r}
+library(plyr)
+count(da21600.0022,'H4OD1Y')#Respondents date of birth
+count(da21600.0022,'H4ID5H')#Diagnosis of depression
+count(da21600.0022,'H4MH22')#Felt depressed in past week
+count(da21600.0022,'H4ID5J')#Diagnosis of anxiety
+```
+
+#try to convert/force factor variable for age 
+```{r}
+library(prettyR)
+lbls <- sort(levels(da21600.0022$H4OD1Y))
+lbls <- (sub("^\\([0-9]+\\) +(.+$)", "\\1", lbls))
+da21600.0022$H4OD1Y <- as.numeric(sub("^\\(0*([0-9]+)\\).+$", "\\1",da21600.0022$H4OD1Y))
+da21600.0022$H4OD1Y <- add.value.labels(da21600.0022$H4OD1Y, lbls)
+```
+```{r}
+class(da21600.0022$H4OD1Y)
+```
+```{r}
+summary(da21600.0022$H4OD1Y)
+```
+#merge datasets by ID
+```{r}
+total <- merge(da21600.0001,da21600.0022, by="AID")
+```
+
+#Exploratory data analysis
+
+#make a scatterplot matrix- Is depression related to: gender, age, depressed in past week, ever had sex, #of sex partners
+```{r}
+library(car)
+scatterplotMatrix(~ H4ID5H + BIO_SEX + H1GI1Y + H4MH22 + H1CO1 + H1NR6, data = total)
+```
+#repeat with span and log(H1NR6)
+```{r}
+library(car)
+scatterplotMatrix(~ H4ID5H + BIO_SEX + H1GI1Y + H4MH22 + H1CO1 + log2(H1NR6), span =0.7, data = total)
+```
+
+#make histogram to display #of sexual partners
+```{r}
+hist(total$H1NR6)
+```
+#I need to show a histogram of #sexual partners <100 to zoom in on the left of histogram above but I am not sure how. Log2 didn't work.
+
+#boxplot graph 
+```{r}
+library(ggplot2)
+       ggplot(total, aes(x = BIO_SEX, y = H1NR6, fill = BIO_SEX)) + geom_boxplot() +
+         facet_wrap(~ H4ID5H, ncol = 2)
+```
+#Again, this is not very helpful to view the data because it plots all possible values for #of sexual partners. If I could narrow this variable to <100 it would be more telling and interesting.
+
+#create new variable of depression and anxiety diagnosis
+```{r}
+total$both <- total$H4ID5H + total$H4ID5J
+```
+#did not work for factors. This seems too complicated with the levels for the limited knowledge I have at this point. I guess I will stick with regression models using either depression OR anxiety as an outcome.
+
+#first divide dataset into a training and test set based on random uniform number on fixed seed (project assignment date)
+```{r}
+set.seed(20170329)
+#create new variable group that is a random sample
+total$group <- runif(length(total$H4ID5H), min = 0, max = 1)
+
+summary(total)
+```
+```{r}
+total.train <- subset(total, group <= 0.90)
+total.test <- subset(total, group > 0.90)
+```
+#graph training set
+```{r}
+plot(H4ID5H ~ log2(H1NR6), data = total.train)
+```
+#plot test set
+```{r}
+plot(H4ID5H ~ log2(H1NR6), data = total.test)
+```
+
+#regression model #1
+```{r}
+total.mod1 <- glm(H4ID5H ~ log2(H1NR6)+ BIO_SEX + H1GI1Y + H4MH22 + H1CO1, data = total.train,
+            family = binomial(link = "logit"))
+summary(total.mod1)
+```
+#Females are  1.3x as likely to be diagnosed with depression than males.
+#For every unit change in being depressed in the past week, the log odds of depression increases by 2.4 (most or all the time), 2.0 (a lot of time), 1.2 (sometimes)
+#Number of sexual partners doesn't seem to be associated in model 1
+
+## CIs using profiled log-likelihood
+```{r}
+confint(total.mod1)
+```
+
