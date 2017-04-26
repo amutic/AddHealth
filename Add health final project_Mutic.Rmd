@@ -73,14 +73,17 @@ count(da21600.0001,'H1FS6') #felt depressed in past week
 count(da21600.0001,'H1CO1')#ever had sexual intercourse
 count(da21600.0001,'H1NR6')#number of sexual partners (missing=4,874!)
 count(da21600.0001,'H1GI1Y')#Year of birth (survey was in 1995)
+na.rm = TRUE
 ```
 #summarize numerical variables
 ```{r}
 summary(da21600.0001$H1NR6)
+na.rm = TRUE
 ```
 
 ```{r}
 sd(da21600.0001$H1NR6)
+na.rm = TRUE
 ```
 #sd not working here either
 -------------------------------------------------------------------------------------------
@@ -96,6 +99,7 @@ count(da21600.0022,'H4OD1Y')#Respondents date of birth
 count(da21600.0022,'H4ID5H')#Diagnosis of depression
 count(da21600.0022,'H4MH22')#Felt depressed in past week
 count(da21600.0022,'H4ID5J')#Diagnosis of anxiety
+na.rm = TRUE
 ```
 
 #try to convert/force factor variable for age 
@@ -108,13 +112,16 @@ library(prettyR)
 ```
 ```{r}
 class(da21600.0022$H4OD1Y)
+na.rm = TRUE
 ```
 ```{r}
 summary(da21600.0022$H4OD1Y)
+na.rm = TRUE
 ```
 #merge datasets by ID
 ```{r}
 total <- merge(da21600.0001,da21600.0022, by="AID")
+na.rm = TRUE
 ```
 
 #Exploratory data analysis
@@ -123,11 +130,13 @@ total <- merge(da21600.0001,da21600.0022, by="AID")
 ```{r}
 library(car)
 scatterplotMatrix(~ H4ID5H + BIO_SEX + H1GI1Y + H4MH22 + H1CO1 + H1NR6, data = total)
+na.rm = TRUE
 ```
 #repeat with span and log(H1NR6)
 ```{r}
 library(car)
 scatterplotMatrix(~ H4ID5H + BIO_SEX + H1GI1Y + H4MH22 + H1CO1 + log2(H1NR6), span =0.7, data = total)
+na.rm = TRUE
 ```
 
 #make histogram to display #of sexual partners
@@ -137,6 +146,7 @@ main = "Histogram of Number of Sex Partners",
 xlab= "Number of Sex Partners",
 xlim = c(0,60),
 ylim = c(0, 1500))
+na.rm = TRUE
 ```
 #I zoomed in on the histogram using limits of x and y to better see the graph. However, instead of a nice curved line, it appears to be a box.
 #attempted to do log of H1NR6 (number of sex partners) but code didn't work
@@ -151,6 +161,7 @@ library(ggplot2)
        fill = BIO_SEX)) + geom_boxplot() +
          facet_wrap(~ H4ID5H, ncol = 2) + ggtitle("Number of Sex Partners by Gender") +
          labs(x="Gender", y="Number of Sex Partners")
+         na.rm = TRUE
          
 ```
 #Again, this is not very helpful to view the data because it plots all possible values for #of sexual partners. If I could narrow this variable to <100 it would be more telling and interesting.
@@ -159,18 +170,20 @@ library(ggplot2)
 ```{r}
 total$both <- paste(total$H4ID5H,total$H4ID5J)
 total
+na.rm = TRUE
 ```
 
 #check out new variable
 ```{r}
 summary(total$both)
 ```
-#did not work. it seems all 5114 rows were omitted
+#did not work. it seems all 4114 rows were omitted
 #will try to add new variable with only yes answers
 ```{r}
 total$both <- 99
 total$both <- ifelse((total$H4ID5H==1) & (total$H4ID5J==1),"Yes","No")
 total$both
+na.rm = TRUE
 ```
 #check out new variable
 ```{r}
